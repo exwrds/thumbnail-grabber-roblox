@@ -1,0 +1,14 @@
+{
+    "name": "thumbnail-proxy",
+    "version": "1.0.0",
+    "description": "proxy server for rblx tumbnails",
+    "main": "main.js",
+    "scripts": {
+      "start": "node main.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "axios": "^1.6.0"
+    }
+  }
+  
