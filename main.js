@@ -63,6 +63,7 @@ async function processQueue() {
 }
 
 app.post('/', (req, res) => {
+    console.warn(`received post request, handling...`)
     postQueue.push({ req, res });
     processQueue();
 });
