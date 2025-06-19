@@ -52,12 +52,12 @@ async function processQueue() {
             if (response.status >= 200 && response.status < 300) {
                 res.status(200).json({ status: 'success', code: response.status });
             } else {
-                print(response.data)
+                console.log(response.data)
                 res.status(response.status).json({ error: 'Webhook returned error', details: response.data });
             }
         }
     } catch (error) {
-        console.error('POST queue err:', error.message);
+        console.error('POST queue err:', error.details);
         res.status(500).json({ error: error.message });
     } finally {
         isProcessing = false;
