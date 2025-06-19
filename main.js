@@ -39,10 +39,12 @@ async function processQueue() {
 
     try {
         const { webhookUrl, payload } = req.body;
-
+        
+        console.log(webhookUrl, payload)
+        
         if (!webhookUrl || !payload) {
             console.warn("INVALID PARAMS")
-            res.status(400).json({ error: 'Missing webhookUrl or payload' });
+            res.status(400).json({ error: 'missing webhookUrl or payload' });
         } else {
             const response = await axios.post(webhookUrl, payload, {
                 headers: { 'Content-Type': 'application/json' }
