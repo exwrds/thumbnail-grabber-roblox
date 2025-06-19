@@ -43,7 +43,6 @@ async function processQueue() {
         console.log(webhookUrl, payload)
         
         if (!webhookUrl || !payload) {
-            console.warn("INVALID PARAMS")
             res.status(400).json({ error: 'missing webhookUrl or payload' });
         } else {
             const response = await axios.post(webhookUrl, payload, {
@@ -53,6 +52,7 @@ async function processQueue() {
             if (response.status >= 200 && response.status < 300) {
                 res.status(200).json({ status: 'success', code: response.status });
             } else {
+                print(response.data)
                 res.status(response.status).json({ error: 'Webhook returned error', details: response.data });
             }
         }
