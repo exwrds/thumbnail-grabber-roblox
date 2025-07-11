@@ -42,26 +42,30 @@ async function processQueue() {
 try {
     const { webhookUrl, payload } = req.body;
 
-    console.log(webhookUrl, payload);
+    console.log('Webhook URL:', webhookUrl);
+    console.log('Payload:', payload);
 
     if (!webhookUrl || !payload) {
         return res.status(400).json({ error: 'Missing webhookUrl or payload' });
     }
 
-    const response = await axios.post(webhookUrl, payload, {
-        headers: { 'Content-Type': 'application/json' }
+    const response = await axios.post(webhookUrl, JSON.stringify(payload), {
+        headers: {
+            'Content-Type': 'application/json'
+        }
     });
-
-    console.log(response.status, response.data)
 
     if (response.status >= 200 && response.status < 300) {
         return res.status(200).json({ status: 'success', code: response.status });
     } else {
-        console.log(response.data);
-        return res.status(response.status).json({ error: 'Webhook returned error', details: response.data });
+        console.log('Webhook error response:', response.data);
+        return res.status(response.status).json({
+            error: 'Webhook returned error',
+            details: response.data
+        });
     }
 } catch (error) {
-    console.error('Failed! Queue error:', error.message);
+    console.error('Failed! Queue error:', error);
     return res.status(500).json({ error: error.message || 'Unknown error' });
 } finally {
     isProcessing = false;
