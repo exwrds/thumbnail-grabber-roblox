@@ -1,34 +1,38 @@
-// Constant Variables
+// Dependencies
 const express = require('express');
 const axios = require('axios');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.json());
 
+// GET: Avatar thumbnail
 app.get('/get-thumbnail', async (req, res) => {
     const { userId } = req.query;
     if (!userId) {
-        return res.status(400).send('Missing userId');
+        return res.status(400).json({ error: 'Missing userId' });
     }
 
     try {
-        const { data } = await axios.get('https://thumbnails.roblox.com/v1/users/avatar-headshot', {
+        const response = await axios.get('https://thumbnails.roblox.com/v1/users/avatar-headshot', {
             params: {
                 userIds: userId,
                 size: '150x150',
                 format: 'Png',
                 isCircular: false
-            }
+            },
+            timeout: 5000
         });
-        res.json(data);
+        res.json(response.data);
     } catch (error) {
         console.error('Thumbnail error:', error.message);
-        res.status(500).send('Error fetching thumbnail');
+        res.status(500).json({ error: 'Error fetching thumbnail' });
     }
 });
 
-// simple queue thing for post requests
+// POST: Webhook Queue System
 const postQueue = [];
 let isProcessing = false;
 
@@ -37,48 +41,46 @@ async function processQueue() {
     isProcessing = true;
 
     const { req, res } = postQueue.shift();
-
-
-try {
     const { webhookUrl, payload } = req.body;
 
-    console.log('Webhook URL:', webhookUrl);
-    console.log('Payload:', payload);
-
     if (!webhookUrl || !payload) {
-        return res.status(400).json({ error: 'Missing webhookUrl or payload' });
+        res.status(400).json({ error: 'Missing webhookUrl or payload' });
+        isProcessing = false;
+        return processQueue();
     }
 
-    const response = await axios.post(webhookUrl, JSON.stringify(payload), {
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
-
-    if (response.status >= 200 && response.status < 300) {
-        return res.status(200).json({ status: 'success', code: response.status });
-    } else {
-        console.log('Webhook error response:', response.data);
-        return res.status(response.status).json({
-            error: 'Webhook returned error',
-            details: response.data
+    try {
+        const response = await axios.post(webhookUrl, payload, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 5000
         });
+
+        res.status(response.status).json({
+            status: 'success',
+            code: response.status
+        });
+    } catch (error) {
+        console.error('Queue processing error:', error.message);
+        const status = error.response?.status || 500;
+        res.status(status).json({
+            error: 'Webhook failed',
+            details: error.response?.data || error.message
+        });
+    } finally {
+        isProcessing = false;
+        processQueue();
     }
-} catch (error) {
-    console.error('Failed! Queue error:', error);
-    return res.status(500).json({ error: error.message || 'Unknown error' });
-} finally {
-    isProcessing = false;
-    processQueue();
-}
 }
 
 app.post('/', (req, res) => {
-    console.warn(`received post request, handling...`)
+    console.warn('Received POST request, queued...');
     postQueue.push({ req, res });
     processQueue();
 });
 
+// listener.
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
