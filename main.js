@@ -61,7 +61,7 @@ try {
         return res.status(response.status).json({ error: 'Webhook returned error', details: response.data });
     }
 } catch (error) {
-    console.error('Failed! Queue error:', error).message;
+    console.error('Failed! Queue error:', error.message);
     return res.status(500).json({ error: error.message || 'Unknown error' });
 } finally {
     isProcessing = false;
